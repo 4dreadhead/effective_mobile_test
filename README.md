@@ -6,7 +6,7 @@
 `MM.YYYY`.
 
 Структура кода: точка входа — `cmd/server`, бизнес-логика и слои данных - в
-`internal/subscriptions` (model/usecase/presenter/controller/view), инфраструктура -
+`internal/subscriptions` (model/service/presenter/handler/view), инфраструктура -
 в `internal/platform` (auth, db, http). Миграции находятся в `migrations/`.
 
 ## Сборка образа / приложения
@@ -43,4 +43,4 @@
 
 Для use cases написаны тесты:
 
-`go test ./internal/subscriptions/usecase/...`
+`go test ./internal/subscriptions/service/...`

@@ -1,7 +1,8 @@
-package controller
+package handler
 
 import (
 	apperrors "effective_mobile_test/internal/platform/errors"
+	"effective_mobile_test/internal/subscriptions/repository"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -10,21 +11,21 @@ import (
 
 	"effective_mobile_test/internal/platform/httputil"
 	"effective_mobile_test/internal/subscriptions/presenter"
-	"effective_mobile_test/internal/subscriptions/usecase"
+	"effective_mobile_test/internal/subscriptions/service"
 
 	"github.com/go-chi/chi/v5"
 )
 
-type SubscriptionController struct {
-	usecase *usecase.SubscriptionUsecase
+type SubscriptionHandler struct {
+	service *service.SubscriptionService
 	logger  *slog.Logger
 }
 
-func NewSubscriptionController(uc *usecase.SubscriptionUsecase, logger *slog.Logger) *SubscriptionController {
-	return &SubscriptionController{usecase: uc, logger: logger}
+func NewSubscriptionHandler(service *service.SubscriptionService, logger *slog.Logger) *SubscriptionHandler {
+	return &SubscriptionHandler{service: service, logger: logger}
 }
 
-func (c *SubscriptionController) Register(r chi.Router) {
+func (c *SubscriptionHandler) Register(r chi.Router) {
 	r.Get("/total", c.total)
 	r.Post("/", c.create)
 	r.Get("/", c.list)
@@ -56,14 +57,14 @@ type updateRequest struct {
 // @Success 201 {object} view.SubscriptionResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Router /subscriptions [post]
-func (c *SubscriptionController) create(w http.ResponseWriter, r *http.Request) {
+func (c *SubscriptionHandler) create(w http.ResponseWriter, r *http.Request) {
 	var req createRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "invalid_json", err.Error())
 		return
 	}
 
-	sub, err := c.usecase.Create(r.Context(), usecase.CreateSubscriptionInput{
+	sub, err := c.service.Create(r.Context(), service.CreateSubscriptionInput{
 		ServiceName: req.ServiceName,
 		MonthlyCost: req.MonthlyCost,
 		UserID:      req.UserID,
@@ -86,13 +87,13 @@ func (c *SubscriptionController) create(w http.ResponseWriter, r *http.Request) 
 // @Failure 400 {object} httputil.ErrorResponse
 // @Failure 404 {object} httputil.ErrorResponse
 // @Router /subscriptions/{id} [get]
-func (c *SubscriptionController) get(w http.ResponseWriter, r *http.Request) {
+func (c *SubscriptionHandler) get(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(chi.URLParam(r, "id"))
 	if err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "invalid_id", "id must be numeric")
 		return
 	}
-	sub, err := c.usecase.Get(r.Context(), id)
+	sub, err := c.service.Get(r.Context(), id)
 	if err != nil {
 		c.writeUsecaseError(w, err)
 		return
@@ -110,7 +111,7 @@ func (c *SubscriptionController) get(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} httputil.ErrorResponse
 // @Failure 404 {object} httputil.ErrorResponse
 // @Router /subscriptions/{id} [put]
-func (c *SubscriptionController) update(w http.ResponseWriter, r *http.Request) {
+func (c *SubscriptionHandler) update(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(chi.URLParam(r, "id"))
 	if err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "invalid_id", "id must be numeric")
@@ -121,7 +122,7 @@ func (c *SubscriptionController) update(w http.ResponseWriter, r *http.Request) 
 		httputil.WriteError(w, http.StatusBadRequest, "invalid_json", err.Error())
 		return
 	}
-	sub, err := c.usecase.Update(r.Context(), id, usecase.UpdateSubscriptionInput{
+	sub, err := c.service.Update(r.Context(), id, service.UpdateSubscriptionInput{
 		ServiceName: req.ServiceName,
 		MonthlyCost: req.MonthlyCost,
 		From:        req.From,
@@ -143,13 +144,13 @@ func (c *SubscriptionController) update(w http.ResponseWriter, r *http.Request) 
 // @Failure 400 {object} httputil.ErrorResponse
 // @Failure 404 {object} httputil.ErrorResponse
 // @Router /subscriptions/{id} [delete]
-func (c *SubscriptionController) delete(w http.ResponseWriter, r *http.Request) {
+func (c *SubscriptionHandler) delete(w http.ResponseWriter, r *http.Request) {
 	id, err := parseID(chi.URLParam(r, "id"))
 	if err != nil {
 		httputil.WriteError(w, http.StatusBadRequest, "invalid_id", "id must be numeric")
 		return
 	}
-	if err = c.usecase.Delete(r.Context(), id); err != nil {
+	if err = c.service.Delete(r.Context(), id); err != nil {
 		c.writeUsecaseError(w, err)
 		return
 	}
@@ -165,12 +166,12 @@ func (c *SubscriptionController) delete(w http.ResponseWriter, r *http.Request) 
 // @Success 200 {array} view.SubscriptionResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Router /subscriptions [get]
-func (c *SubscriptionController) list(w http.ResponseWriter, r *http.Request) {
-	var filter usecase.ListFilter
+func (c *SubscriptionHandler) list(w http.ResponseWriter, r *http.Request) {
+	var filter repository.ListFilter
 	filter.UserID = r.URL.Query().Get("user_id")
 	filter.ServiceName = r.URL.Query().Get("service_name")
 
-	subs, err := c.usecase.List(r.Context(), filter)
+	subs, err := c.service.List(r.Context(), filter)
 	if err != nil {
 		c.writeUsecaseError(w, err)
 		return
@@ -189,14 +190,14 @@ func (c *SubscriptionController) list(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} view.TotalResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Router /subscriptions/total [get]
-func (c *SubscriptionController) total(w http.ResponseWriter, r *http.Request) {
+func (c *SubscriptionHandler) total(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	userID := query.Get("user_id")
 	serviceName := query.Get("service_name")
 	from := query.Get("from")
 	to := query.Get("to")
 
-	total, hasData, err := c.usecase.TotalCost(r.Context(), usecase.TotalFilter{
+	total, hasData, err := c.service.TotalCost(r.Context(), repository.TotalFilter{
 		UserID:      userID,
 		ServiceName: serviceName,
 		From:        from,
@@ -209,7 +210,7 @@ func (c *SubscriptionController) total(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, presenter.ToTotalResponse(total, hasData))
 }
 
-func (c *SubscriptionController) writeUsecaseError(w http.ResponseWriter, err error) {
+func (c *SubscriptionHandler) writeUsecaseError(w http.ResponseWriter, err error) {
 	c.logger.Error(err.Error())
 
 	switch {

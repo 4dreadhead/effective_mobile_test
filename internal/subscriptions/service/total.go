@@ -1,13 +1,14 @@
-package usecase
+package service
 
 import (
 	"context"
 	apperrors "effective_mobile_test/internal/platform/errors"
+	"effective_mobile_test/internal/subscriptions/repository"
 	"fmt"
 	"time"
 )
 
-func (u *SubscriptionUsecase) TotalCost(ctx context.Context, filter TotalFilter) (int64, bool, error) {
+func (u *SubscriptionService) TotalCost(ctx context.Context, filter repository.TotalFilter) (int64, bool, error) {
 	fromDate, toDate, err := validateFilterPeriod(filter.From, filter.To)
 	if err != nil {
 		return 0, false, err

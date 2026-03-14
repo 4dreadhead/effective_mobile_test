@@ -14,6 +14,4 @@ type Subscription struct {
 	MonthlyCost int
 	FromDate    time.Time
 	ToDate      *time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
 }

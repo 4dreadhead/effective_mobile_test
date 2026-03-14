@@ -1,14 +1,15 @@
-package usecase_test
+package service_test
 
 import (
 	"context"
+	"effective_mobile_test/internal/subscriptions/repository"
 	"errors"
 	"testing"
 	"time"
 
 	apperrors "effective_mobile_test/internal/platform/errors"
 	"effective_mobile_test/internal/subscriptions/model"
-	"effective_mobile_test/internal/subscriptions/usecase"
+	"effective_mobile_test/internal/subscriptions/service"
 )
 
 // --- Mock ---
@@ -18,8 +19,8 @@ type mockRepo struct {
 	getFn    func(ctx context.Context, id uint64) (*model.Subscription, error)
 	updateFn func(ctx context.Context, sub *model.Subscription) (*model.Subscription, error)
 	deleteFn func(ctx context.Context, id uint64) error
-	listFn   func(ctx context.Context, filter usecase.ListFilter) ([]model.Subscription, error)
-	totalFn  func(ctx context.Context, filter usecase.TotalFilter) (int64, bool, error)
+	listFn   func(ctx context.Context, filter repository.ListFilter) ([]model.Subscription, error)
+	totalFn  func(ctx context.Context, filter repository.TotalFilter) (int64, bool, error)
 }
 
 func (m *mockRepo) CreateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
@@ -34,10 +35,10 @@ func (m *mockRepo) UpdateSubscription(ctx context.Context, sub *model.Subscripti
 func (m *mockRepo) DeleteSubscription(ctx context.Context, id uint64) error {
 	return m.deleteFn(ctx, id)
 }
-func (m *mockRepo) ListSubscriptions(ctx context.Context, filter usecase.ListFilter) ([]model.Subscription, error) {
+func (m *mockRepo) ListSubscriptions(ctx context.Context, filter repository.ListFilter) ([]model.Subscription, error) {
 	return m.listFn(ctx, filter)
 }
-func (m *mockRepo) TotalCost(ctx context.Context, filter usecase.TotalFilter) (int64, bool, error) {
+func (m *mockRepo) TotalCost(ctx context.Context, filter repository.TotalFilter) (int64, bool, error) {
 	return m.totalFn(ctx, filter)
 }
 
@@ -54,9 +55,9 @@ func TestCreate_Success(t *testing.T) {
 			return &sub, nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
-	result, err := uc.Create(context.Background(), usecase.CreateSubscriptionInput{
+	result, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Yandex Plus",
 		MonthlyCost: 400,
 		UserID:      "user-1",
@@ -72,9 +73,9 @@ func TestCreate_Success(t *testing.T) {
 }
 
 func TestCreate_EmptyServiceName(t *testing.T) {
-	uc := usecase.NewSubscriptionUsecase(&mockRepo{})
+	uc := service.NewSubscriptionService(&mockRepo{})
 
-	_, err := uc.Create(context.Background(), usecase.CreateSubscriptionInput{
+	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "   ",
 		MonthlyCost: 400,
 		UserID:      "user-1",
@@ -87,9 +88,9 @@ func TestCreate_EmptyServiceName(t *testing.T) {
 }
 
 func TestCreate_NegativeCost(t *testing.T) {
-	uc := usecase.NewSubscriptionUsecase(&mockRepo{})
+	uc := service.NewSubscriptionService(&mockRepo{})
 
-	_, err := uc.Create(context.Background(), usecase.CreateSubscriptionInput{
+	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Netflix",
 		MonthlyCost: -1,
 		UserID:      "user-1",
@@ -102,9 +103,9 @@ func TestCreate_NegativeCost(t *testing.T) {
 }
 
 func TestCreate_ToBeforeFrom(t *testing.T) {
-	uc := usecase.NewSubscriptionUsecase(&mockRepo{})
+	uc := service.NewSubscriptionService(&mockRepo{})
 
-	_, err := uc.Create(context.Background(), usecase.CreateSubscriptionInput{
+	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Netflix",
 		MonthlyCost: 500,
 		UserID:      "user-1",
@@ -118,9 +119,9 @@ func TestCreate_ToBeforeFrom(t *testing.T) {
 }
 
 func TestCreate_InvalidFromFormat(t *testing.T) {
-	uc := usecase.NewSubscriptionUsecase(&mockRepo{})
+	uc := service.NewSubscriptionService(&mockRepo{})
 
-	_, err := uc.Create(context.Background(), usecase.CreateSubscriptionInput{
+	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Netflix",
 		MonthlyCost: 500,
 		UserID:      "user-1",
@@ -140,7 +141,7 @@ func TestGet_NotFound(t *testing.T) {
 			return nil, apperrors.ErrRecordNotFound
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
 	_, err := uc.Get(context.Background(), 999)
 
@@ -156,7 +157,7 @@ func TestGet_Success(t *testing.T) {
 			return expected, nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
 	result, err := uc.Get(context.Background(), 42)
 
@@ -176,7 +177,7 @@ func TestDelete_NotFound(t *testing.T) {
 			return apperrors.ErrRecordNotFound
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
 	err := uc.Delete(context.Background(), 999)
 
@@ -191,7 +192,7 @@ func TestDelete_Success(t *testing.T) {
 			return nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
 	if err := uc.Delete(context.Background(), 1); err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -206,9 +207,9 @@ func TestUpdate_NotFound(t *testing.T) {
 			return nil, apperrors.ErrRecordNotFound
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
-	_, err := uc.Update(context.Background(), 999, usecase.UpdateSubscriptionInput{})
+	_, err := uc.Update(context.Background(), 999, service.UpdateSubscriptionInput{})
 
 	if !errors.Is(err, apperrors.ErrRecordNotFound) {
 		t.Errorf("expected ErrRecordNotFound, got %v", err)
@@ -227,9 +228,9 @@ func TestUpdate_ToBeforeFrom(t *testing.T) {
 			}, nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
-	_, err := uc.Update(context.Background(), 1, usecase.UpdateSubscriptionInput{
+	_, err := uc.Update(context.Background(), 1, service.UpdateSubscriptionInput{
 		To: ptr("01.2025"),
 	})
 
@@ -254,9 +255,9 @@ func TestUpdate_Success(t *testing.T) {
 			return sub, nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
-	result, err := uc.Update(context.Background(), 1, usecase.UpdateSubscriptionInput{
+	result, err := uc.Update(context.Background(), 1, service.UpdateSubscriptionInput{
 		MonthlyCost: ptr(600),
 	})
 
@@ -271,9 +272,9 @@ func TestUpdate_Success(t *testing.T) {
 // --- TotalCost ---
 
 func TestTotalCost_InvalidFrom(t *testing.T) {
-	uc := usecase.NewSubscriptionUsecase(&mockRepo{})
+	uc := service.NewSubscriptionService(&mockRepo{})
 
-	_, _, err := uc.TotalCost(context.Background(), usecase.TotalFilter{
+	_, _, err := uc.TotalCost(context.Background(), repository.TotalFilter{
 		From: "bad",
 		To:   "12.2025",
 	})
@@ -285,13 +286,13 @@ func TestTotalCost_InvalidFrom(t *testing.T) {
 
 func TestTotalCost_NoData(t *testing.T) {
 	repo := &mockRepo{
-		totalFn: func(_ context.Context, filter usecase.TotalFilter) (int64, bool, error) {
+		totalFn: func(_ context.Context, filter repository.TotalFilter) (int64, bool, error) {
 			return 0, false, nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
-	total, hasData, err := uc.TotalCost(context.Background(), usecase.TotalFilter{
+	total, hasData, err := uc.TotalCost(context.Background(), repository.TotalFilter{
 		UserID:      "user-1",
 		ServiceName: "Netflix",
 		From:        "01.2025",
@@ -311,13 +312,13 @@ func TestTotalCost_NoData(t *testing.T) {
 
 func TestTotalCost_WithData(t *testing.T) {
 	repo := &mockRepo{
-		totalFn: func(_ context.Context, filter usecase.TotalFilter) (int64, bool, error) {
+		totalFn: func(_ context.Context, filter repository.TotalFilter) (int64, bool, error) {
 			return 2400, true, nil
 		},
 	}
-	uc := usecase.NewSubscriptionUsecase(repo)
+	uc := service.NewSubscriptionService(repo)
 
-	total, hasData, err := uc.TotalCost(context.Background(), usecase.TotalFilter{
+	total, hasData, err := uc.TotalCost(context.Background(), repository.TotalFilter{
 		UserID:      "user-1",
 		ServiceName: "Netflix",
 		From:        "01.2025",

@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"context"
@@ -10,7 +10,15 @@ import (
 	"effective_mobile_test/internal/subscriptions/model"
 )
 
-func (u *SubscriptionUsecase) Create(ctx context.Context, input CreateSubscriptionInput) (*model.Subscription, error) {
+type CreateSubscriptionInput struct {
+	ServiceName string
+	MonthlyCost int
+	UserID      string
+	From        string
+	To          string
+}
+
+func (u *SubscriptionService) Create(ctx context.Context, input CreateSubscriptionInput) (*model.Subscription, error) {
 	fromDate, toDate, err := validateCreate(input)
 	if err != nil {
 		return nil, err

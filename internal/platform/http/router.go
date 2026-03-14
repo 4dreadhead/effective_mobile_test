@@ -8,12 +8,12 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"effective_mobile_test/internal/platform/auth"
-	"effective_mobile_test/internal/subscriptions/controller"
+	"effective_mobile_test/internal/subscriptions/handler"
 )
 
 func NewRouter(
 	logger *slog.Logger,
-	subscriptionController *controller.SubscriptionController,
+	SubscriptionHandler *handler.SubscriptionHandler,
 	swaggerHandler http.Handler,
 	apiKey string,
 ) *chi.Mux {
@@ -24,7 +24,7 @@ func NewRouter(
 
 	r.Route("/subscriptions", func(sr chi.Router) {
 		sr.Use(auth.Middleware(apiKey))
-		subscriptionController.Register(sr)
+		SubscriptionHandler.Register(sr)
 	})
 
 	if swaggerHandler != nil {

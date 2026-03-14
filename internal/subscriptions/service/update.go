@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"context"
@@ -9,7 +9,14 @@ import (
 	"effective_mobile_test/internal/subscriptions/model"
 )
 
-func (u *SubscriptionUsecase) Update(ctx context.Context, id uint64, input UpdateSubscriptionInput) (*model.Subscription, error) {
+type UpdateSubscriptionInput struct {
+	ServiceName *string
+	MonthlyCost *int
+	From        *string
+	To          *string
+}
+
+func (u *SubscriptionService) Update(ctx context.Context, id uint64, input UpdateSubscriptionInput) (*model.Subscription, error) {
 	sub, err := u.repo.GetSubscription(ctx, id)
 	if err != nil {
 		return nil, err

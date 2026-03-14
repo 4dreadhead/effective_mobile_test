@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  controller.createRequest:
+  handler.createRequest:
     properties:
       from:
         type: string
@@ -13,7 +13,7 @@ definitions:
       user_id:
         type: string
     type: object
-  controller.updateRequest:
+  handler.updateRequest:
     properties:
       from:
         type: string
@@ -95,7 +95,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controller.createRequest'
+          $ref: '#/definitions/handler.createRequest'
       responses:
         "201":
           description: Created
@@ -174,7 +174,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controller.updateRequest'
+          $ref: '#/definitions/handler.updateRequest'
       responses:
         "200":
           description: OK

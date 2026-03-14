@@ -10,9 +10,9 @@ import (
 	"effective_mobile_test/internal/platform/db"
 	platformhttp "effective_mobile_test/internal/platform/http"
 	"effective_mobile_test/internal/platform/logging"
-	"effective_mobile_test/internal/subscriptions/controller"
+	"effective_mobile_test/internal/subscriptions/handler"
 	"effective_mobile_test/internal/subscriptions/repository"
-	"effective_mobile_test/internal/subscriptions/usecase"
+	"effective_mobile_test/internal/subscriptions/service"
 )
 
 // @title Subscription Aggregation Service
@@ -43,10 +43,10 @@ func main() {
 	}
 
 	repo := repository.NewPostgresRepository(conn)
-	uc := usecase.NewSubscriptionUsecase(repo)
-	subController := controller.NewSubscriptionController(uc, logger)
+	uc := service.NewSubscriptionService(repo)
+	subhandler := handler.NewSubscriptionHandler(uc, logger)
 
-	router := platformhttp.NewRouter(logger, subController, platformhttp.NewSwaggerHandler(), cfg.Auth.APIKey)
+	router := platformhttp.NewRouter(logger, subhandler, platformhttp.NewSwaggerHandler(), cfg.Auth.APIKey)
 
 	server := &http.Server{
 		Addr:    cfg.HTTP.Address,

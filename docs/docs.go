@@ -77,7 +77,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.createRequest"
+                            "$ref": "#/definitions/handler.createRequest"
                         }
                     }
                 ],
@@ -218,7 +218,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.updateRequest"
+                            "$ref": "#/definitions/handler.updateRequest"
                         }
                     }
                 ],
@@ -284,7 +284,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controller.createRequest": {
+        "handler.createRequest": {
             "type": "object",
             "properties": {
                 "from": {
@@ -304,7 +304,7 @@ const docTemplate = `{
                 }
             }
         },
-        "controller.updateRequest": {
+        "handler.updateRequest": {
             "type": "object",
             "properties": {
                 "from": {

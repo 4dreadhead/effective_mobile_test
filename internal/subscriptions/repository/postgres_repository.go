@@ -4,7 +4,6 @@ import (
 	"context"
 	apperrors "effective_mobile_test/internal/platform/errors"
 	"effective_mobile_test/internal/subscriptions/model"
-	"effective_mobile_test/internal/subscriptions/usecase"
 	"errors"
 	"fmt"
 
@@ -66,7 +65,7 @@ func (r *PostgresRepository) DeleteSubscription(ctx context.Context, id uint64) 
 	return r.db.WithContext(ctx).Delete(&model.Subscription{}, id).Error
 }
 
-func (r *PostgresRepository) ListSubscriptions(ctx context.Context, filter usecase.ListFilter) ([]model.Subscription, error) {
+func (r *PostgresRepository) ListSubscriptions(ctx context.Context, filter ListFilter) ([]model.Subscription, error) {
 	query := r.db.WithContext(ctx).Model(&model.Subscription{})
 	if filter.UserID != "" {
 		query = query.Where("user_id = ?", filter.UserID)
@@ -87,7 +86,7 @@ func (r *PostgresRepository) ListSubscriptions(ctx context.Context, filter useca
 	return out, nil
 }
 
-func (r *PostgresRepository) TotalCost(ctx context.Context, filter usecase.TotalFilter) (int64, bool, error) {
+func (r *PostgresRepository) TotalCost(ctx context.Context, filter TotalFilter) (int64, bool, error) {
 	query := r.db.WithContext(ctx).
 		Model(&model.Subscription{}).
 		Select("sum(monthly_cost)")
