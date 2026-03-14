@@ -8,7 +8,6 @@ import (
 
 type Subscription struct {
 	gorm.Model
-	ID          uint64
 	ServiceName string
 	UserID      string
 	MonthlyCost int
