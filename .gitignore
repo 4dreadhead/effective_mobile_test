@@ -18,5 +18,3 @@ docker-compose.yml
 .idea/
 
 bin/server
-data/*
-!data/.keep

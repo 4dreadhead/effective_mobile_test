@@ -16,5 +16,3 @@ vendor/
 **/*.out
 
 bin/server
-data/*
-!data/.keep
