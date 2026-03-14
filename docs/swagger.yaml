@@ -1,0 +1,235 @@
+basePath: /
+definitions:
+  controller.createRequest:
+    properties:
+      from:
+        type: string
+      monthly_cost:
+        type: integer
+      service_name:
+        type: string
+      to:
+        type: string
+      user_id:
+        type: string
+    type: object
+  controller.updateRequest:
+    properties:
+      from:
+        type: string
+      monthly_cost:
+        type: integer
+      service_name:
+        type: string
+      to:
+        type: string
+    type: object
+  httputil.ErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
+  view.SubscriptionResponse:
+    properties:
+      from:
+        type: string
+      id:
+        type: integer
+      monthly_cost:
+        type: integer
+      service_name:
+        type: string
+      to:
+        type: string
+      user_id:
+        type: string
+    type: object
+  view.TotalResponse:
+    properties:
+      has_data:
+        type: boolean
+      total_rub:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: REST service for subscription CRUD and aggregation.
+  title: Subscription Aggregation Service
+  version: "1.0"
+paths:
+  /subscriptions:
+    get:
+      description: List subscriptions with optional filters
+      parameters:
+      - description: User ID (UUID)
+        in: query
+        name: user_id
+        type: string
+      - description: Service name
+        in: query
+        name: service_name
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/view.SubscriptionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List subscriptions
+      tags:
+      - subscriptions
+    post:
+      description: Create a new subscription record
+      parameters:
+      - description: Create subscription
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.createRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/view.SubscriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create subscription
+      tags:
+      - subscriptions
+  /subscriptions/{id}:
+    delete:
+      description: Delete an existing subscription by ID
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete subscription
+      tags:
+      - subscriptions
+    get:
+      description: Retrieve a subscription by ID
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.SubscriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get subscription
+      tags:
+      - subscriptions
+    put:
+      description: Update an existing subscription by ID
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update subscription
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.updateRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.SubscriptionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update subscription
+      tags:
+      - subscriptions
+  /subscriptions/total:
+    get:
+      description: Calculate total subscription cost for a period
+      parameters:
+      - description: User ID (UUID)
+        in: query
+        name: user_id
+        type: string
+      - description: Service name
+        in: query
+        name: service_name
+        type: string
+      - description: From period (MM.YYYY)
+        in: query
+        name: from
+        type: string
+      - description: To period (MM.YYYY)
+        in: query
+        name: to
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/view.TotalResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Total subscription cost
+      tags:
+      - subscriptions
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

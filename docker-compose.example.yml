@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: subscriptions_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HTTP_ADDRESS: ":8080"
+      DATABASE_DSN: "postgres://postgres@db:5432/subscriptions_development?sslmode=disable"
+      API_KEY: "change-me"
+    ports:
+      - "8080:8080"
