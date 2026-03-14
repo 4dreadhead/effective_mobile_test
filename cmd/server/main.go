@@ -44,7 +44,7 @@ func main() {
 
 	repo := repository.NewPostgresRepository(conn)
 	uc := usecase.NewSubscriptionUsecase(repo)
-	subController := controller.NewSubscriptionController(uc)
+	subController := controller.NewSubscriptionController(uc, logger)
 
 	router := platformhttp.NewRouter(logger, subController, platformhttp.NewSwaggerHandler(), cfg.Auth.APIKey)
 

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	apperrors "effective_mobile_test/internal/platform/errors"
 	"fmt"
 	"time"
 )
@@ -19,11 +20,11 @@ func (u *SubscriptionUsecase) TotalCost(ctx context.Context, filter TotalFilter)
 func validateFilterPeriod(from, to string) (*time.Time, *time.Time, error) {
 	fromDate, err := parseMonthYear(from)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: invalid from interval", ErrValidation)
+		return nil, nil, fmt.Errorf("%w: invalid from interval", apperrors.ErrInvalidFields)
 	}
 	toDate, err := parseMonthYear(to)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: invalid to interval", ErrValidation)
+		return nil, nil, fmt.Errorf("%w: invalid to interval", apperrors.ErrInvalidFields)
 	}
 
 	return fromDate, toDate, nil

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	apperrors "effective_mobile_test/internal/platform/errors"
 	"fmt"
 	"strings"
 	"time"
@@ -28,15 +29,15 @@ func (u *SubscriptionUsecase) Create(ctx context.Context, input CreateSubscripti
 
 func validateCreate(input CreateSubscriptionInput) (*time.Time, *time.Time, error) {
 	if strings.TrimSpace(input.ServiceName) == "" {
-		return nil, nil, fmt.Errorf("%w: service name is required", ErrValidation)
+		return nil, nil, fmt.Errorf("%w: service name is required", apperrors.ErrInvalidFields)
 	}
-	if input.MonthlyCost <= 0 {
-		return nil, nil, fmt.Errorf("%w: monthly cost must be positive", ErrValidation)
+	if input.MonthlyCost < 0 {
+		return nil, nil, fmt.Errorf("%w: monthly cost must be positive", apperrors.ErrInvalidFields)
 	}
 
 	fromDate, err := parseMonthYear(input.From)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w: invalid from period", ErrValidation)
+		return nil, nil, fmt.Errorf("%w: invalid from period", apperrors.ErrInvalidFields)
 	}
 
 	var toDate *time.Time
@@ -44,10 +45,10 @@ func validateCreate(input CreateSubscriptionInput) (*time.Time, *time.Time, erro
 	if input.To != "" {
 		toDate, err = parseMonthYear(input.To)
 		if err != nil {
-			return nil, nil, fmt.Errorf("%w: invalid to period", ErrValidation)
+			return nil, nil, fmt.Errorf("%w: invalid to period", apperrors.ErrInvalidFields)
 		}
 		if toDate.Before(*fromDate) {
-			return nil, nil, fmt.Errorf("%w: to must be on or after from", ErrValidation)
+			return nil, nil, fmt.Errorf("%w: to must be on or after from", apperrors.ErrInvalidFields)
 		}
 	}
 

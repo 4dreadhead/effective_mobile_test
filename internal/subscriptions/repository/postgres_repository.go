@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	apperrors "effective_mobile_test/internal/platform/errors"
 	"effective_mobile_test/internal/subscriptions/model"
 	"effective_mobile_test/internal/subscriptions/usecase"
+	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -25,20 +28,23 @@ func (r *PostgresRepository) CreateSubscription(ctx context.Context, sub model.S
 		ToDate:      sub.ToDate,
 	}
 	if err := r.db.WithContext(ctx).Create(record).Error; err != nil {
-		return nil, err
+		return nil, r.mapError(err)
 	}
 	return record, nil
 }
 
 func (r *PostgresRepository) GetSubscription(ctx context.Context, id uint64) (*model.Subscription, error) {
-	var record *model.Subscription
-	if err := r.db.WithContext(ctx).First(record, id).Error; err != nil {
-		return nil, err
+	var record model.Subscription
+	err := r.db.WithContext(ctx).First(&record, id).Error
+
+	if err != nil {
+		return nil, r.mapError(err)
 	}
-	return record, nil
+
+	return &record, nil
 }
 
-func (r *PostgresRepository) UpdateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
+func (r *PostgresRepository) UpdateSubscription(ctx context.Context, sub *model.Subscription) (*model.Subscription, error) {
 	updates := map[string]any{
 		"service_name": sub.ServiceName,
 		"user_id":      sub.UserID,
@@ -46,12 +52,12 @@ func (r *PostgresRepository) UpdateSubscription(ctx context.Context, sub model.S
 		"from_date":    sub.FromDate,
 		"to_date":      sub.ToDate,
 	}
-	err := r.db.WithContext(ctx).Model(&model.Subscription{}).
+	err := r.db.WithContext(ctx).Model(sub).
 		Where("id = ?", sub.ID).
 		Updates(updates).Error
 
 	if err != nil {
-		return nil, err
+		return nil, r.mapError(err)
 	}
 	return r.GetSubscription(ctx, sub.ID)
 }
@@ -71,7 +77,7 @@ func (r *PostgresRepository) ListSubscriptions(ctx context.Context, filter useca
 
 	var rows []model.Subscription
 	if err := query.Order("id asc").Find(&rows).Error; err != nil {
-		return nil, err
+		return nil, r.mapError(err)
 	}
 
 	out := make([]model.Subscription, 0, len(rows))
@@ -102,11 +108,18 @@ func (r *PostgresRepository) TotalCost(ctx context.Context, filter usecase.Total
 	var total *int64
 	err := query.Scan(&total).Error
 	if err != nil {
-		return 0, false, err
+		return 0, false, r.mapError(err)
 	}
 	if total == nil {
 		return 0, false, nil
 	}
 
 	return *total, true, nil
+}
+
+func (r *PostgresRepository) mapError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return apperrors.ErrRecordNotFound
+	}
+	return fmt.Errorf("repo error: %w", err)
 }

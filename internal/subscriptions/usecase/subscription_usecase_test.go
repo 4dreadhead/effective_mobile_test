@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
+	apperrors "effective_mobile_test/internal/platform/errors"
 	"effective_mobile_test/internal/subscriptions/model"
 	"effective_mobile_test/internal/subscriptions/usecase"
-
-	"gorm.io/gorm"
 )
 
 // --- Mock ---
@@ -17,7 +16,7 @@ import (
 type mockRepo struct {
 	createFn func(ctx context.Context, sub model.Subscription) (*model.Subscription, error)
 	getFn    func(ctx context.Context, id uint64) (*model.Subscription, error)
-	updateFn func(ctx context.Context, sub model.Subscription) (*model.Subscription, error)
+	updateFn func(ctx context.Context, sub *model.Subscription) (*model.Subscription, error)
 	deleteFn func(ctx context.Context, id uint64) error
 	listFn   func(ctx context.Context, filter usecase.ListFilter) ([]model.Subscription, error)
 	totalFn  func(ctx context.Context, filter usecase.TotalFilter) (int64, bool, error)
@@ -29,7 +28,7 @@ func (m *mockRepo) CreateSubscription(ctx context.Context, sub model.Subscriptio
 func (m *mockRepo) GetSubscription(ctx context.Context, id uint64) (*model.Subscription, error) {
 	return m.getFn(ctx, id)
 }
-func (m *mockRepo) UpdateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
+func (m *mockRepo) UpdateSubscription(ctx context.Context, sub *model.Subscription) (*model.Subscription, error) {
 	return m.updateFn(ctx, sub)
 }
 func (m *mockRepo) DeleteSubscription(ctx context.Context, id uint64) error {
@@ -82,8 +81,8 @@ func TestCreate_EmptyServiceName(t *testing.T) {
 		From:        "01.2025",
 	})
 
-	if !errors.Is(err, usecase.ErrValidation) {
-		t.Errorf("expected ErrValidation, got %v", err)
+	if !errors.Is(err, apperrors.ErrInvalidFields) {
+		t.Errorf("expected ErrInvalidFields, got %v", err)
 	}
 }
 
@@ -97,8 +96,8 @@ func TestCreate_NegativeCost(t *testing.T) {
 		From:        "01.2025",
 	})
 
-	if !errors.Is(err, usecase.ErrValidation) {
-		t.Errorf("expected ErrValidation, got %v", err)
+	if !errors.Is(err, apperrors.ErrInvalidFields) {
+		t.Errorf("expected ErrInvalidFields, got %v", err)
 	}
 }
 
@@ -113,8 +112,8 @@ func TestCreate_ToBeforeFrom(t *testing.T) {
 		To:          "01.2025",
 	})
 
-	if !errors.Is(err, usecase.ErrValidation) {
-		t.Errorf("expected ErrValidation, got %v", err)
+	if !errors.Is(err, apperrors.ErrInvalidFields) {
+		t.Errorf("expected ErrInvalidFields, got %v", err)
 	}
 }
 
@@ -128,8 +127,8 @@ func TestCreate_InvalidFromFormat(t *testing.T) {
 		From:        "2025-01",
 	})
 
-	if !errors.Is(err, usecase.ErrValidation) {
-		t.Errorf("expected ErrValidation, got %v", err)
+	if !errors.Is(err, apperrors.ErrInvalidFields) {
+		t.Errorf("expected ErrInvalidFields, got %v", err)
 	}
 }
 
@@ -138,15 +137,15 @@ func TestCreate_InvalidFromFormat(t *testing.T) {
 func TestGet_NotFound(t *testing.T) {
 	repo := &mockRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
-			return nil, gorm.ErrRecordNotFound
+			return nil, apperrors.ErrRecordNotFound
 		},
 	}
 	uc := usecase.NewSubscriptionUsecase(repo)
 
 	_, err := uc.Get(context.Background(), 999)
 
-	if !errors.Is(err, usecase.ErrNotFound) {
-		t.Errorf("expected ErrNotFound, got %v", err)
+	if !errors.Is(err, apperrors.ErrRecordNotFound) {
+		t.Errorf("expected ErrRecordNotFound, got %v", err)
 	}
 }
 
@@ -174,15 +173,15 @@ func TestGet_Success(t *testing.T) {
 func TestDelete_NotFound(t *testing.T) {
 	repo := &mockRepo{
 		deleteFn: func(_ context.Context, id uint64) error {
-			return gorm.ErrRecordNotFound
+			return apperrors.ErrRecordNotFound
 		},
 	}
 	uc := usecase.NewSubscriptionUsecase(repo)
 
 	err := uc.Delete(context.Background(), 999)
 
-	if !errors.Is(err, usecase.ErrNotFound) {
-		t.Errorf("expected ErrNotFound, got %v", err)
+	if !errors.Is(err, apperrors.ErrRecordNotFound) {
+		t.Errorf("expected ErrRecordNotFound, got %v", err)
 	}
 }
 
@@ -204,15 +203,15 @@ func TestDelete_Success(t *testing.T) {
 func TestUpdate_NotFound(t *testing.T) {
 	repo := &mockRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
-			return nil, gorm.ErrRecordNotFound
+			return nil, apperrors.ErrRecordNotFound
 		},
 	}
 	uc := usecase.NewSubscriptionUsecase(repo)
 
 	_, err := uc.Update(context.Background(), 999, usecase.UpdateSubscriptionInput{})
 
-	if !errors.Is(err, usecase.ErrNotFound) {
-		t.Errorf("expected ErrNotFound, got %v", err)
+	if !errors.Is(err, apperrors.ErrRecordNotFound) {
+		t.Errorf("expected ErrRecordNotFound, got %v", err)
 	}
 }
 
@@ -234,8 +233,8 @@ func TestUpdate_ToBeforeFrom(t *testing.T) {
 		To: ptr("01.2025"),
 	})
 
-	if !errors.Is(err, usecase.ErrValidation) {
-		t.Errorf("expected ErrValidation, got %v", err)
+	if !errors.Is(err, apperrors.ErrInvalidFields) {
+		t.Errorf("expected ErrInvalidFields, got %v", err)
 	}
 }
 
@@ -251,8 +250,8 @@ func TestUpdate_Success(t *testing.T) {
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
 			return existing, nil
 		},
-		updateFn: func(_ context.Context, sub model.Subscription) (*model.Subscription, error) {
-			return &sub, nil
+		updateFn: func(_ context.Context, sub *model.Subscription) (*model.Subscription, error) {
+			return sub, nil
 		},
 	}
 	uc := usecase.NewSubscriptionUsecase(repo)
@@ -279,8 +278,8 @@ func TestTotalCost_InvalidFrom(t *testing.T) {
 		To:   "12.2025",
 	})
 
-	if !errors.Is(err, usecase.ErrValidation) {
-		t.Errorf("expected ErrValidation, got %v", err)
+	if !errors.Is(err, apperrors.ErrInvalidFields) {
+		t.Errorf("expected ErrInvalidFields, got %v", err)
 	}
 }
 

@@ -1,8 +1,10 @@
 package controller
 
 import (
+	apperrors "effective_mobile_test/internal/platform/errors"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -15,10 +17,11 @@ import (
 
 type SubscriptionController struct {
 	usecase *usecase.SubscriptionUsecase
+	logger  *slog.Logger
 }
 
-func NewSubscriptionController(uc *usecase.SubscriptionUsecase) *SubscriptionController {
-	return &SubscriptionController{usecase: uc}
+func NewSubscriptionController(uc *usecase.SubscriptionUsecase, logger *slog.Logger) *SubscriptionController {
+	return &SubscriptionController{usecase: uc, logger: logger}
 }
 
 func (c *SubscriptionController) Register(r chi.Router) {
@@ -207,13 +210,15 @@ func (c *SubscriptionController) total(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *SubscriptionController) writeUsecaseError(w http.ResponseWriter, err error) {
+	c.logger.Error(err.Error())
+
 	switch {
-	case errors.Is(err, usecase.ErrValidation):
+	case errors.Is(err, apperrors.ErrInvalidFields):
 		httputil.WriteError(w, http.StatusBadRequest, "validation_error", err.Error())
-	case errors.Is(err, usecase.ErrNotFound):
+	case errors.Is(err, apperrors.ErrRecordNotFound):
 		httputil.WriteError(w, http.StatusNotFound, "not_found", "resource not found")
 	default:
-		httputil.WriteError(w, http.StatusInternalServerError, "internal_error", err.Error())
+		httputil.WriteError(w, http.StatusInternalServerError, "internal_error", "internal server error")
 	}
 }
 

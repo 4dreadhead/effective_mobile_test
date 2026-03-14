@@ -2,28 +2,22 @@ package usecase
 
 import (
 	"context"
-	"errors"
+	apperrors "effective_mobile_test/internal/platform/errors"
 	"fmt"
 	"strings"
 
 	"effective_mobile_test/internal/subscriptions/model"
-
-	"gorm.io/gorm"
 )
 
 func (u *SubscriptionUsecase) Update(ctx context.Context, id uint64, input UpdateSubscriptionInput) (*model.Subscription, error) {
 	sub, err := u.repo.GetSubscription(ctx, id)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, ErrNotFound
-	}
 	if err != nil {
 		return nil, err
 	}
-
 	if input.ServiceName != nil {
 		name := strings.TrimSpace(*input.ServiceName)
 		if name == "" {
-			return nil, fmt.Errorf("%w: service name is required", ErrValidation)
+			return nil, fmt.Errorf("%w: service name is required", apperrors.ErrInvalidFields)
 		}
 		sub.ServiceName = name
 	}
@@ -48,7 +42,7 @@ func (u *SubscriptionUsecase) Update(ctx context.Context, id uint64, input Updat
 	if err = validateUpdate(sub); err != nil {
 		return nil, err
 	}
-	sub, err = u.repo.UpdateSubscription(ctx, *sub)
+	sub, err = u.repo.UpdateSubscription(ctx, sub)
 	if err != nil {
 		return nil, err
 	}
@@ -56,17 +50,17 @@ func (u *SubscriptionUsecase) Update(ctx context.Context, id uint64, input Updat
 }
 
 func validateUpdate(sub *model.Subscription) error {
-	if sub.MonthlyCost <= 0 {
-		return fmt.Errorf("%w: monthly cost must be positive", ErrValidation)
+	if sub.MonthlyCost < 0 {
+		return fmt.Errorf("%w: monthly cost must be positive", apperrors.ErrInvalidFields)
 	}
 	if strings.TrimSpace(sub.ServiceName) == "" {
-		return fmt.Errorf("%w: service name is required", ErrValidation)
+		return fmt.Errorf("%w: service name is required", apperrors.ErrInvalidFields)
 	}
 	if sub.FromDate.IsZero() {
-		return fmt.Errorf("%w: from date is required", ErrValidation)
+		return fmt.Errorf("%w: from date is required", apperrors.ErrInvalidFields)
 	}
 	if sub.ToDate != nil && sub.ToDate.Before(sub.FromDate) {
-		return fmt.Errorf("%w: to must be on or after from", ErrValidation)
+		return fmt.Errorf("%w: to must be on or after from", apperrors.ErrInvalidFields)
 	}
 
 	return nil
