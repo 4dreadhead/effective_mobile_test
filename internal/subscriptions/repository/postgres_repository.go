@@ -97,14 +97,14 @@ func (r *PostgresRepository) TotalCost(ctx context.Context, filter TotalFilter) 
 	if filter.UserID != "" {
 		query = query.Where("user_id = ?", filter.UserID)
 	}
-	if filter.FromDate != nil {
+	if filter.ToDate != nil {
 		query = query.Where("from_date <= ?", filter.ToDate)
 	}
-	if filter.ToDate != nil {
-		query = query.Where(
-			r.db.Where("to_date IS NULL").Or("to_date >= ?", filter.FromDate),
-		)
+	subquery := r.db.Where("to_date IS NULL")
+	if filter.FromDate != nil {
+		subquery = subquery.Or("to_date >= ?", filter.FromDate)
 	}
+	query = query.Where(subquery)
 
 	var total *int64
 	err := query.Scan(&total).Error

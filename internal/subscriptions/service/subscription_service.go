@@ -16,6 +16,13 @@ func NewSubscriptionService(repo repository.SubscriptionRepository) *Subscriptio
 	return &SubscriptionService{repo: repo}
 }
 
+const (
+	minYear  = 1
+	maxYear  = 9999
+	minMonth = 1
+	maxMonth = 12
+)
+
 func parseMonthYear(value string) (*time.Time, error) {
 	if value == "" {
 		return nil, nil
@@ -35,10 +42,10 @@ func parseMonthYear(value string) (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	if month < 1 || month > 12 {
+	if month < minMonth || month > maxMonth {
 		return nil, fmt.Errorf("invalid month")
 	}
-	if year < 1 {
+	if year < minYear || year > maxYear {
 		return nil, fmt.Errorf("invalid year")
 	}
 
