@@ -31,7 +31,7 @@ definitions:
       error:
         type: string
     type: object
-  view.SubscriptionResponse:
+  presenter.SubscriptionResponse:
     properties:
       from:
         type: string
@@ -46,7 +46,7 @@ definitions:
       user_id:
         type: string
     type: object
-  view.TotalResponse:
+  presenter.TotalResponse:
     properties:
       has_data:
         type: boolean
@@ -76,7 +76,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/view.SubscriptionResponse'
+              $ref: '#/definitions/presenter.SubscriptionResponse'
             type: array
         "400":
           description: Bad Request
@@ -100,7 +100,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/view.SubscriptionResponse'
+            $ref: '#/definitions/presenter.SubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -147,7 +147,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.SubscriptionResponse'
+            $ref: '#/definitions/presenter.SubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -179,7 +179,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.SubscriptionResponse'
+            $ref: '#/definitions/presenter.SubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -217,7 +217,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/view.TotalResponse'
+            $ref: '#/definitions/presenter.TotalResponse'
         "400":
           description: Bad Request
           schema:

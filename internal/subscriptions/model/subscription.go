@@ -2,12 +2,9 @@ package model
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Subscription struct {
-	gorm.Model
 	ID          uint64
 	ServiceName string
 	UserID      string

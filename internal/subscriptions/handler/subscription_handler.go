@@ -54,7 +54,7 @@ type updateRequest struct {
 // @Description Create a new subscription record
 // @Tags subscriptions
 // @Param request body createRequest true "Create subscription"
-// @Success 201 {object} view.SubscriptionResponse
+// @Success 201 {object} presenter.SubscriptionResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Router /subscriptions [post]
 func (c *SubscriptionHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func (c *SubscriptionHandler) create(w http.ResponseWriter, r *http.Request) {
 // @Description Retrieve a subscription by ID
 // @Tags subscriptions
 // @Param id path int true "Subscription ID"
-// @Success 200 {object} view.SubscriptionResponse
+// @Success 200 {object} presenter.SubscriptionResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Failure 404 {object} httputil.ErrorResponse
 // @Router /subscriptions/{id} [get]
@@ -107,7 +107,7 @@ func (c *SubscriptionHandler) get(w http.ResponseWriter, r *http.Request) {
 // @Tags subscriptions
 // @Param id path int true "Subscription ID"
 // @Param request body updateRequest true "Update subscription"
-// @Success 200 {object} view.SubscriptionResponse
+// @Success 200 {object} presenter.SubscriptionResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Failure 404 {object} httputil.ErrorResponse
 // @Router /subscriptions/{id} [put]
@@ -163,7 +163,7 @@ func (c *SubscriptionHandler) delete(w http.ResponseWriter, r *http.Request) {
 // @Tags subscriptions
 // @Param user_id query string false "User ID (UUID)"
 // @Param service_name query string false "Service name"
-// @Success 200 {array} view.SubscriptionResponse
+// @Success 200 {array} presenter.SubscriptionResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Router /subscriptions [get]
 func (c *SubscriptionHandler) list(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +187,7 @@ func (c *SubscriptionHandler) list(w http.ResponseWriter, r *http.Request) {
 // @Param service_name query string false "Service name"
 // @Param from query string false "From period (MM.YYYY)"
 // @Param to query string false "To period (MM.YYYY)"
-// @Success 200 {object} view.TotalResponse
+// @Success 200 {object} presenter.TotalResponse
 // @Failure 400 {object} httputil.ErrorResponse
 // @Router /subscriptions/total [get]
 func (c *SubscriptionHandler) total(w http.ResponseWriter, r *http.Request) {

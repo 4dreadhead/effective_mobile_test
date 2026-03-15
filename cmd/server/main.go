@@ -42,7 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	repo := repository.NewPostgresRepository(conn)
+	repo := repository.NewPgSubscriptionRepository(conn)
 	uc := service.NewSubscriptionService(repo)
 	subhandler := handler.NewSubscriptionHandler(uc, logger)
 

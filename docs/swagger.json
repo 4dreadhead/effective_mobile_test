@@ -40,7 +40,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/view.SubscriptionResponse"
+                                "$ref": "#/definitions/presenter.SubscriptionResponse"
                             }
                         }
                     },
@@ -78,7 +78,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/view.SubscriptionResponse"
+                            "$ref": "#/definitions/presenter.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -132,7 +132,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.TotalResponse"
+                            "$ref": "#/definitions/presenter.TotalResponse"
                         }
                     },
                     "400": {
@@ -169,7 +169,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.SubscriptionResponse"
+                            "$ref": "#/definitions/presenter.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -219,7 +219,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.SubscriptionResponse"
+                            "$ref": "#/definitions/presenter.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -325,7 +325,7 @@
                 }
             }
         },
-        "view.SubscriptionResponse": {
+        "presenter.SubscriptionResponse": {
             "type": "object",
             "properties": {
                 "from": {
@@ -348,7 +348,7 @@
                 }
             }
         },
-        "view.TotalResponse": {
+        "presenter.TotalResponse": {
             "type": "object",
             "properties": {
                 "has_data": {

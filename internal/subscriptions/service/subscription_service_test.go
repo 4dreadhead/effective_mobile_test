@@ -14,7 +14,7 @@ import (
 
 // --- Mock ---
 
-type mockRepo struct {
+type dummyRepo struct {
 	createFn func(ctx context.Context, sub model.Subscription) (*model.Subscription, error)
 	getFn    func(ctx context.Context, id uint64) (*model.Subscription, error)
 	updateFn func(ctx context.Context, sub *model.Subscription) (*model.Subscription, error)
@@ -23,22 +23,22 @@ type mockRepo struct {
 	totalFn  func(ctx context.Context, filter repository.TotalFilter) (int64, bool, error)
 }
 
-func (m *mockRepo) CreateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
+func (m *dummyRepo) CreateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
 	return m.createFn(ctx, sub)
 }
-func (m *mockRepo) GetSubscription(ctx context.Context, id uint64) (*model.Subscription, error) {
+func (m *dummyRepo) GetSubscription(ctx context.Context, id uint64) (*model.Subscription, error) {
 	return m.getFn(ctx, id)
 }
-func (m *mockRepo) UpdateSubscription(ctx context.Context, sub *model.Subscription) (*model.Subscription, error) {
+func (m *dummyRepo) UpdateSubscription(ctx context.Context, sub *model.Subscription) (*model.Subscription, error) {
 	return m.updateFn(ctx, sub)
 }
-func (m *mockRepo) DeleteSubscription(ctx context.Context, id uint64) error {
+func (m *dummyRepo) DeleteSubscription(ctx context.Context, id uint64) error {
 	return m.deleteFn(ctx, id)
 }
-func (m *mockRepo) ListSubscriptions(ctx context.Context, filter repository.ListFilter) ([]model.Subscription, error) {
+func (m *dummyRepo) ListSubscriptions(ctx context.Context, filter repository.ListFilter) ([]model.Subscription, error) {
 	return m.listFn(ctx, filter)
 }
-func (m *mockRepo) TotalCost(ctx context.Context, filter repository.TotalFilter) (int64, bool, error) {
+func (m *dummyRepo) TotalCost(ctx context.Context, filter repository.TotalFilter) (int64, bool, error) {
 	return m.totalFn(ctx, filter)
 }
 
@@ -49,7 +49,7 @@ func ptr[T any](v T) *T { return &v }
 // --- Create ---
 
 func TestCreate_Success(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		createFn: func(_ context.Context, sub model.Subscription) (*model.Subscription, error) {
 			sub.ID = 1
 			return &sub, nil
@@ -73,7 +73,7 @@ func TestCreate_Success(t *testing.T) {
 }
 
 func TestCreate_EmptyServiceName(t *testing.T) {
-	uc := service.NewSubscriptionService(&mockRepo{})
+	uc := service.NewSubscriptionService(&dummyRepo{})
 
 	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "   ",
@@ -88,7 +88,7 @@ func TestCreate_EmptyServiceName(t *testing.T) {
 }
 
 func TestCreate_NegativeCost(t *testing.T) {
-	uc := service.NewSubscriptionService(&mockRepo{})
+	uc := service.NewSubscriptionService(&dummyRepo{})
 
 	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Netflix",
@@ -103,7 +103,7 @@ func TestCreate_NegativeCost(t *testing.T) {
 }
 
 func TestCreate_ToBeforeFrom(t *testing.T) {
-	uc := service.NewSubscriptionService(&mockRepo{})
+	uc := service.NewSubscriptionService(&dummyRepo{})
 
 	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Netflix",
@@ -119,7 +119,7 @@ func TestCreate_ToBeforeFrom(t *testing.T) {
 }
 
 func TestCreate_InvalidFromFormat(t *testing.T) {
-	uc := service.NewSubscriptionService(&mockRepo{})
+	uc := service.NewSubscriptionService(&dummyRepo{})
 
 	_, err := uc.Create(context.Background(), service.CreateSubscriptionInput{
 		ServiceName: "Netflix",
@@ -136,7 +136,7 @@ func TestCreate_InvalidFromFormat(t *testing.T) {
 // --- Get ---
 
 func TestGet_NotFound(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
 			return nil, apperrors.ErrRecordNotFound
 		},
@@ -152,7 +152,7 @@ func TestGet_NotFound(t *testing.T) {
 
 func TestGet_Success(t *testing.T) {
 	expected := &model.Subscription{ID: 42, ServiceName: "Spotify"}
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
 			return expected, nil
 		},
@@ -172,7 +172,7 @@ func TestGet_Success(t *testing.T) {
 // --- Delete ---
 
 func TestDelete_NotFound(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		deleteFn: func(_ context.Context, id uint64) error {
 			return apperrors.ErrRecordNotFound
 		},
@@ -187,7 +187,7 @@ func TestDelete_NotFound(t *testing.T) {
 }
 
 func TestDelete_Success(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		deleteFn: func(_ context.Context, id uint64) error {
 			return nil
 		},
@@ -202,7 +202,7 @@ func TestDelete_Success(t *testing.T) {
 // --- Update ---
 
 func TestUpdate_NotFound(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
 			return nil, apperrors.ErrRecordNotFound
 		},
@@ -218,7 +218,7 @@ func TestUpdate_NotFound(t *testing.T) {
 
 func TestUpdate_ToBeforeFrom(t *testing.T) {
 	from := time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
 			return &model.Subscription{
 				ID:          1,
@@ -247,7 +247,7 @@ func TestUpdate_Success(t *testing.T) {
 		MonthlyCost: 500,
 		FromDate:    from,
 	}
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		getFn: func(_ context.Context, id uint64) (*model.Subscription, error) {
 			return existing, nil
 		},
@@ -272,7 +272,7 @@ func TestUpdate_Success(t *testing.T) {
 // --- TotalCost ---
 
 func TestTotalCost_InvalidFrom(t *testing.T) {
-	uc := service.NewSubscriptionService(&mockRepo{})
+	uc := service.NewSubscriptionService(&dummyRepo{})
 
 	_, _, err := uc.TotalCost(context.Background(), repository.TotalFilter{
 		From: "bad",
@@ -285,7 +285,7 @@ func TestTotalCost_InvalidFrom(t *testing.T) {
 }
 
 func TestTotalCost_NoData(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		totalFn: func(_ context.Context, filter repository.TotalFilter) (int64, bool, error) {
 			return 0, false, nil
 		},
@@ -311,7 +311,7 @@ func TestTotalCost_NoData(t *testing.T) {
 }
 
 func TestTotalCost_WithData(t *testing.T) {
-	repo := &mockRepo{
+	repo := &dummyRepo{
 		totalFn: func(_ context.Context, filter repository.TotalFilter) (int64, bool, error) {
 			return 2400, true, nil
 		},

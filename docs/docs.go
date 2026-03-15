@@ -47,7 +47,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/view.SubscriptionResponse"
+                                "$ref": "#/definitions/presenter.SubscriptionResponse"
                             }
                         }
                     },
@@ -85,7 +85,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/view.SubscriptionResponse"
+                            "$ref": "#/definitions/presenter.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -139,7 +139,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.TotalResponse"
+                            "$ref": "#/definitions/presenter.TotalResponse"
                         }
                     },
                     "400": {
@@ -176,7 +176,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.SubscriptionResponse"
+                            "$ref": "#/definitions/presenter.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -226,7 +226,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/view.SubscriptionResponse"
+                            "$ref": "#/definitions/presenter.SubscriptionResponse"
                         }
                     },
                     "400": {
@@ -332,7 +332,7 @@ const docTemplate = `{
                 }
             }
         },
-        "view.SubscriptionResponse": {
+        "presenter.SubscriptionResponse": {
             "type": "object",
             "properties": {
                 "from": {
@@ -355,7 +355,7 @@ const docTemplate = `{
                 }
             }
         },
-        "view.TotalResponse": {
+        "presenter.TotalResponse": {
             "type": "object",
             "properties": {
                 "has_data": {

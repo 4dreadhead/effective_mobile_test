@@ -10,16 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type PostgresRepository struct {
+type PgSubscriptionRepository struct {
 	db *gorm.DB
 }
 
-func NewPostgresRepository(db *gorm.DB) *PostgresRepository {
-	return &PostgresRepository{db: db}
+func NewPgSubscriptionRepository(db *gorm.DB) *PgSubscriptionRepository {
+	return &PgSubscriptionRepository{db: db}
 }
 
-func (r *PostgresRepository) CreateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
-	record := &model.Subscription{
+func (r *PgSubscriptionRepository) CreateSubscription(ctx context.Context, sub model.Subscription) (*model.Subscription, error) {
+	record := &Subscription{
 		ServiceName: sub.ServiceName,
 		UserID:      sub.UserID,
 		MonthlyCost: sub.MonthlyCost,
@@ -29,21 +29,22 @@ func (r *PostgresRepository) CreateSubscription(ctx context.Context, sub model.S
 	if err := r.db.WithContext(ctx).Create(record).Error; err != nil {
 		return nil, r.mapError(err)
 	}
-	return record, nil
+
+	return record.ToDomainModel(), nil
 }
 
-func (r *PostgresRepository) GetSubscription(ctx context.Context, id uint64) (*model.Subscription, error) {
-	var record model.Subscription
+func (r *PgSubscriptionRepository) GetSubscription(ctx context.Context, id uint64) (*model.Subscription, error) {
+	var record Subscription
 	err := r.db.WithContext(ctx).First(&record, id).Error
 
 	if err != nil {
 		return nil, r.mapError(err)
 	}
 
-	return &record, nil
+	return record.ToDomainModel(), nil
 }
 
-func (r *PostgresRepository) UpdateSubscription(ctx context.Context, sub *model.Subscription) (*model.Subscription, error) {
+func (r *PgSubscriptionRepository) UpdateSubscription(ctx context.Context, sub *model.Subscription) (*model.Subscription, error) {
 	updates := map[string]any{
 		"service_name": sub.ServiceName,
 		"user_id":      sub.UserID,
@@ -61,12 +62,12 @@ func (r *PostgresRepository) UpdateSubscription(ctx context.Context, sub *model.
 	return r.GetSubscription(ctx, sub.ID)
 }
 
-func (r *PostgresRepository) DeleteSubscription(ctx context.Context, id uint64) error {
-	return r.db.WithContext(ctx).Delete(&model.Subscription{}, id).Error
+func (r *PgSubscriptionRepository) DeleteSubscription(ctx context.Context, id uint64) error {
+	return r.db.WithContext(ctx).Delete(&Subscription{}, id).Error
 }
 
-func (r *PostgresRepository) ListSubscriptions(ctx context.Context, filter ListFilter) ([]model.Subscription, error) {
-	query := r.db.WithContext(ctx).Model(&model.Subscription{})
+func (r *PgSubscriptionRepository) ListSubscriptions(ctx context.Context, filter ListFilter) ([]model.Subscription, error) {
+	query := r.db.WithContext(ctx).Model(&Subscription{})
 	if filter.UserID != "" {
 		query = query.Where("user_id = ?", filter.UserID)
 	}
@@ -74,22 +75,22 @@ func (r *PostgresRepository) ListSubscriptions(ctx context.Context, filter ListF
 		query = query.Where("service_name = ?", filter.ServiceName)
 	}
 
-	var rows []model.Subscription
-	if err := query.Order("id asc").Find(&rows).Error; err != nil {
+	var rows []Subscription
+	if err := query.Order("id ASC").Find(&rows).Error; err != nil {
 		return nil, r.mapError(err)
 	}
 
 	out := make([]model.Subscription, 0, len(rows))
 	for _, item := range rows {
-		out = append(out, item)
+		out = append(out, *item.ToDomainModel())
 	}
 	return out, nil
 }
 
-func (r *PostgresRepository) TotalCost(ctx context.Context, filter TotalFilter) (int64, bool, error) {
+func (r *PgSubscriptionRepository) TotalCost(ctx context.Context, filter TotalFilter) (int64, bool, error) {
 	query := r.db.WithContext(ctx).
-		Model(&model.Subscription{}).
-		Select("sum(monthly_cost)")
+		Model(&Subscription{}).
+		Select("SUM(monthly_cost)")
 
 	if filter.ServiceName != "" {
 		query = query.Where("service_name = ?", filter.ServiceName)
@@ -100,11 +101,9 @@ func (r *PostgresRepository) TotalCost(ctx context.Context, filter TotalFilter) 
 	if filter.ToDate != nil {
 		query = query.Where("from_date <= ?", filter.ToDate)
 	}
-	subquery := r.db.Where("to_date IS NULL")
 	if filter.FromDate != nil {
-		subquery = subquery.Or("to_date >= ?", filter.FromDate)
+		query = query.Where(r.db.Where("to_date IS NULL").Or("to_date >= ?", filter.FromDate))
 	}
-	query = query.Where(subquery)
 
 	var total *int64
 	err := query.Scan(&total).Error
@@ -118,7 +117,7 @@ func (r *PostgresRepository) TotalCost(ctx context.Context, filter TotalFilter) 
 	return *total, true, nil
 }
 
-func (r *PostgresRepository) mapError(err error) error {
+func (r *PgSubscriptionRepository) mapError(err error) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return apperrors.ErrRecordNotFound
 	}
